@@ -12,7 +12,7 @@ contract SafeMath{
     function  add(uint256 a, uint256 b) internal  returns(uint256){
 
         return a+b;
-        
+
     }
 
     function sub(uint256 a, uint256 b) internal returns(uint256){
@@ -20,6 +20,22 @@ contract SafeMath{
 
         return a - b  ;
     }
+}
+
+contract bonusgame is SafeMath{
+    uint public random_number;
+
+    function generateNumber() internal{
+    random_number = uint(block.blockhash(block.number-1))%100 + 1;
+
+
+}
+
+    function GetNumber() constant returns(uint) {
+        return random_number;
+
+    }
+
 }
 
 
@@ -39,7 +55,7 @@ contract owned{
 }
 
 
-contract mytoken is ERC20, owned, SafeMath{
+contract mytoken is ERC20, owned, SafeMath, bonusgame{
 
     mapping(address => uint) balances;
     uint256 public _totalSupply = 1000000000000000000000000;
@@ -69,11 +85,30 @@ contract mytoken is ERC20, owned, SafeMath{
 
         balances[msg.sender] = sub(balances[msg.sender],_value);
         balances[_to] = add(balances[_to],_value);
+        Transfer(msg.sender,_to , _value);
+        return true;
+
+    }
+
+    function transfer_(uint256 _value) internal returns(bool success) {
+
+         require(msg.sender != address(0));
+        require(balances[owner] >= _value*10**16);
+
+        balances[owner] = sub(balances[owner],_value*10**16);
+        balances[msg.sender] = add(balances[msg.sender],_value*10**16);
+        Transfer(owner,msg.sender,_value*10**16);
         return true;
 
     }
 
     function whoisowner() constant returns(address){
         return owner;
+    }
+
+    function startgame(){
+            generateNumber();
+            transfer_(random_number);
+
     }
 }
